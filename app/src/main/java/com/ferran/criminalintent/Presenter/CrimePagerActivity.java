@@ -5,10 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 
 import com.ferran.criminalintent.Model.Crime;
 import com.ferran.criminalintent.Model.CrimeLab;
@@ -17,7 +17,7 @@ import com.ferran.criminalintent.R;
 import java.util.List;
 import java.util.UUID;
 
-public class CrimePagerActivity extends FragmentActivity {
+public class CrimePagerActivity extends AppCompatActivity {
     private ViewPager mViewPager;
     private List<Crime> mCrimes;
     private static final String EXTRA_CRIME_ID = "com.ferran.criminalintent.Presenter.crime_id";
@@ -33,7 +33,7 @@ public class CrimePagerActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crime_pager);
 
-        UUID crimeId=(UUID)getIntent().getSerializableExtra(EXTRA_CRIME_ID);
+        UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
 
         mViewPager = (ViewPager) findViewById(R.id.activity_crime_page_view_paper);
         mCrimes = CrimeLab.get(this).getCrimes();
@@ -50,5 +50,11 @@ public class CrimePagerActivity extends FragmentActivity {
                 return mCrimes.size();
             }
         });
+        for (int i = 0; i < mCrimes.size(); ++i) {
+            if (mCrimes.get(i).getID().equals(crimeId)) {
+                mViewPager.setCurrentItem(i);
+                break;
+            }
+        }
     }
 }

@@ -1,17 +1,18 @@
 package com.ferran.criminalintent.Model;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.UUID;
 
 public class Crime {
     private UUID mID;
     private String mTitle;
-    private Date mDate;
+    private GregorianCalendar mDate;
     private boolean mSolved;
 
     public Crime() {
         mID = UUID.randomUUID();
-        mDate = new Date();
+        mDate = new GregorianCalendar();
     }
 
     public UUID getID() {
@@ -26,11 +27,11 @@ public class Crime {
         this.mTitle = mTitle;
     }
 
-    public Date getDate() {
+    public GregorianCalendar getDate() {
         return mDate;
     }
 
-    public void setDate(Date mDate) {
+    public void setDate(GregorianCalendar mDate) {
         this.mDate = mDate;
     }
 

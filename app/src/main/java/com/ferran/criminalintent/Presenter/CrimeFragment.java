@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +22,9 @@ import com.ferran.criminalintent.Model.CrimeLab;
 import com.ferran.criminalintent.R;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.UUID;
 
 /**
@@ -31,9 +34,15 @@ public class CrimeFragment extends Fragment {
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String EXTRA_CRIME_TITLE = "com.ferran.criminalintent.Presenter.crime_title";
     private static final String EXTRA_CRIME_IS_SOLVED = "com.ferran.criminalintent.Presenter.crime_issolved";
+    private static final String DIALOG_DATE = "DialogDate";
+    private static final String DIALOG_TIME = "DialogTime";
+    private static final int REQUEST_DATE = 0;
+    private static final int REQUEST_TIME = 1;
+
     private Crime mCrime;
     private EditText mTitleText;
     private Button mDateButton;
+    private Button mTimeButton;
     private CheckBox mSolvedCheckBox;
 
     public CrimeFragment() {
@@ -54,6 +63,36 @@ public class CrimeFragment extends Fragment {
         super.onCreate(savedInstanceState);
         UUID crimeID = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeID);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_DATE) {
+            GregorianCalendar date = DatePickerFragment.getDatePickerResult(data);
+            mCrime.setDate(new GregorianCalendar(date.get(Calendar.YEAR), date.get(Calendar.MONTH),
+                    date.get(Calendar.DAY_OF_MONTH), mCrime.getDate().get(Calendar.HOUR_OF_DAY),
+                    mCrime.getDate().get(Calendar.MINUTE)));
+            updateDate(mCrime.getDate());
+        } else if (requestCode == REQUEST_TIME) {
+            GregorianCalendar date = TimePickerFragment.getTimePickerResult(data);
+            mCrime.setDate(new GregorianCalendar(mCrime.getDate().get(Calendar.YEAR),
+                    mCrime.getDate().get(Calendar.MONTH),
+                    mCrime.getDate().get(Calendar.DAY_OF_MONTH),
+                    date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE)));
+            updateTime(mCrime.getDate());
+        }
+    }
+
+    private void updateDate(GregorianCalendar date) {
+        mDateButton.setText(
+                new SimpleDateFormat("EEEE, MMM dd, yyyy").format(date.getTime()));
+    }
+
+    private void updateTime(GregorianCalendar date) {
+        mTimeButton.setText(new SimpleDateFormat("HH:mm").format(date.getTime()));
     }
 
     @Nullable
@@ -79,9 +118,24 @@ public class CrimeFragment extends Fragment {
             }
         });
         mDateButton = (Button) v.findViewById(R.id.crime_date);
-        String data = new SimpleDateFormat("EEEE, MMM dd, yyyy, HH:mm").format(mCrime.getDate());
-        mDateButton.setText(data);
-        mDateButton.setEnabled(false);
+        updateDate(mCrime.getDate());
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = DatePickerActivity.newIntent(getActivity(), mCrime.getDate());
+                startActivityForResult(intent, REQUEST_DATE);
+            }
+        });
+        mTimeButton = (Button) v.findViewById(R.id.crime_time);
+        updateTime(mCrime.getDate());
+        mTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = TimePickerActivity.newIntent(getActivity(), mCrime.getDate());
+                startActivityForResult(intent, REQUEST_TIME);
+            }
+        });
+        //mDateButton.setEnabled(false);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.crime_solved);
         mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -90,6 +144,7 @@ public class CrimeFragment extends Fragment {
                 mCrime.setSolved(isChecked);
             }
         });
+
         //returnResult();
         return v;
     }
