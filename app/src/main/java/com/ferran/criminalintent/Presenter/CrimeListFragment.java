@@ -8,6 +8,9 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -31,6 +34,13 @@ public class CrimeListFragment extends Fragment {
 //    private boolean changeSolved;
 //    private boolean needChange = false;
 
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -47,7 +57,27 @@ public class CrimeListFragment extends Fragment {
         updateUI();
     }
 
-//    @Override
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getID());
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    //    @Override
 //    public void onActivityResult(int requestCode, int resultCode, Intent data) {
 //        if (resultCode != Activity.RESULT_OK) {
 //            return;
@@ -91,6 +121,7 @@ public class CrimeListFragment extends Fragment {
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    //
                     changePostion = getAdapterPosition();
                     Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getID());
                     startActivityForResult(intent, REQUEST_CRIME);
@@ -106,7 +137,7 @@ public class CrimeListFragment extends Fragment {
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
             mDateTextView.setText(
-                    new SimpleDateFormat("EEEE, MMM dd, yyyy, HH:mm").format(mCrime.getDate()));
+                    new SimpleDateFormat("EEEE, MMM dd, yyyy, HH:mm").format(mCrime.getDate().getTime()));
             mSolvedCheckBox.setChecked(mCrime.isSolved());
         }
     }
