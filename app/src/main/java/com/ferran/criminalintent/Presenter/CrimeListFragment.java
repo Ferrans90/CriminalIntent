@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.ferran.criminalintent.Model.Crime;
 import com.ferran.criminalintent.Model.CrimeLab;
@@ -29,11 +29,8 @@ public class CrimeListFragment extends Fragment {
     private static final int REQUEST_CRIME = 1;
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
-    private int changePostion;
-//    private CharSequence changeTitle;
-//    private boolean changeSolved;
-//    private boolean needChange = false;
-
+    private int touchPosition;
+    private boolean mSubtitleVisible;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,36 +58,46 @@ public class CrimeListFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_crime_list, menu);
+
+        MenuItem subtitleItem=menu.findItem(R.id.menu_item_show_subtitle);
+        if(mSubtitleVisible){
+            subtitleItem.setTitle(R.string.hide_subtitle);
+        }else{
+            subtitleItem.setTitle(R.string.show_subtitle);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_new_crime:
+                touchPosition = CrimeLab.get(getActivity()).getCrimes().size();
                 Crime crime = new Crime();
                 CrimeLab.get(getActivity()).addCrime(crime);
                 Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getID());
                 startActivity(intent);
+                return true;
+            case R.id.menu_item_show_subtitle:
+                mSubtitleVisible=!mSubtitleVisible;
+                getActivity().invalidateOptionsMenu();
+                updateSubtitle();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    //    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (resultCode != Activity.RESULT_OK) {
-//            return;
-//        }
-//        if (requestCode == REQUEST_CRIME) {
-//            if (data == null) {
-//                return;
-//            }
-//            needChange = true;
-//            changeTitle = CrimeFragment.changedTitle(data);
-//            changeSolved = CrimeFragment.changedSolved(data);
-//        }
-//    }
+    private void updateSubtitle() {
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+        int crimeCount = crimeLab.getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format, crimeCount);
+
+        if(!mSubtitleVisible){
+            subtitle=null;
+        }
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.getSupportActionBar().setSubtitle(subtitle);
+    }
 
     private void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
@@ -100,14 +107,14 @@ public class CrimeListFragment extends Fragment {
             mAdapter = new CrimeAdapter(crimes);
             mCrimeRecyclerView.setAdapter(mAdapter);
         } else {
-//            if (needChange == true) {
-//                crimes.get(changePostion).setTitle(changeTitle.toString());
-//                crimes.get(changePostion).setSolved(changeSolved);
-//                needChange = false;
-//            }
-
-            mAdapter.notifyItemChanged(changePostion);
+            mAdapter.notifyItemChanged(touchPosition);
         }
+        updateSubtitle();
+        // Easy way, but this may cause the performance problem.
+//        mAdapter = new CrimeAdapter(crimes);
+//        mCrimeRecyclerView.setAdapter(mAdapter);
+//        mAdapter.notifyItemInserted(touchPosition);
+
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder {
@@ -121,8 +128,7 @@ public class CrimeListFragment extends Fragment {
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //
-                    changePostion = getAdapterPosition();
+                    touchPosition = getAdapterPosition();
                     Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getID());
                     startActivityForResult(intent, REQUEST_CRIME);
                 }
@@ -146,7 +152,7 @@ public class CrimeListFragment extends Fragment {
         private List<Crime> mCrimes;
 
         public CrimeAdapter(List<Crime> crimes) {
-            mCrimes = new ArrayList<>(crimes);
+            mCrimes = crimes;
         }
 
         @Override

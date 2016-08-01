@@ -135,7 +135,6 @@ public class CrimeFragment extends Fragment {
                 startActivityForResult(intent, REQUEST_TIME);
             }
         });
-        //mDateButton.setEnabled(false);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.crime_solved);
         mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -145,7 +144,7 @@ public class CrimeFragment extends Fragment {
             }
         });
 
-        //returnResult();
+//        returnResult();
         return v;
     }
 
@@ -155,12 +154,12 @@ public class CrimeFragment extends Fragment {
 //        intent.putExtra(EXTRA_CRIME_IS_SOLVED, mSolvedCheckBox.isChecked());
 //        getActivity().setResult(Activity.RESULT_OK, intent);
 //    }
-
-//    public static CharSequence changedTitle(Intent intent) {
+//
+//    public static CharSequence getChangedTitle(Intent intent) {
 //        return intent.getCharSequenceExtra(EXTRA_CRIME_TITLE);
 //    }
 //
-//    public static boolean changedSolved(Intent intent) {
+//    public static boolean getChangedSolved(Intent intent) {
 //        return intent.getBooleanExtra(EXTRA_CRIME_IS_SOLVED, false);
 //    }
 }
