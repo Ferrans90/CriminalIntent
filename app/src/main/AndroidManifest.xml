@@ -10,16 +10,15 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Presenter.CrimeListActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Presenter.CrimePagerActivity">
-        </activity>
-        <activity android:name=".Presenter.DatePickerActivity">
-        </activity>
-        <activity android:name=".Presenter.TimePickerActivity">
-        </activity>
+        <activity
+            android:name=".Presenter.CrimePagerActivity"
+            android:parentActivityName=".Presenter.CrimeListActivity"></activity>
+        <activity android:name=".Presenter.DatePickerActivity"></activity>
+        <activity android:name=".Presenter.TimePickerActivity"></activity>
     </application>
 
 </manifest>
