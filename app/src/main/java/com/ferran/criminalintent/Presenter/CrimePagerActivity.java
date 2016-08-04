@@ -28,11 +28,15 @@ public class CrimePagerActivity extends AppCompatActivity {
         return intent;
     }
 
+    public static Intent newIntent(Context packageContext){
+        Intent intent=new Intent(packageContext,CrimePagerActivity.class);
+        return intent;
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crime_pager);
-
         UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
 
         mViewPager = (ViewPager) findViewById(R.id.activity_crime_page_view_paper);

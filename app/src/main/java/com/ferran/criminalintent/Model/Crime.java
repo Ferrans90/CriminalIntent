@@ -1,5 +1,7 @@
 package com.ferran.criminalintent.Model;
 
+import android.content.ContentValues;
+
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.UUID;
@@ -11,7 +13,11 @@ public class Crime {
     private boolean mSolved;
 
     public Crime() {
-        mID = UUID.randomUUID();
+        this(UUID.randomUUID());
+    }
+
+    public Crime(UUID id) {
+        mID = id;
         mDate = new GregorianCalendar();
     }
 
@@ -42,4 +48,5 @@ public class Crime {
     public void setSolved(boolean mSolved) {
         this.mSolved = mSolved;
     }
+
 }

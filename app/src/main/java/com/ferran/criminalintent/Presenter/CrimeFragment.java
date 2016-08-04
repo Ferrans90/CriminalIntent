@@ -10,6 +10,9 @@ import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -36,6 +39,7 @@ public class CrimeFragment extends Fragment {
     private static final String EXTRA_CRIME_IS_SOLVED = "com.ferran.criminalintent.Presenter.crime_issolved";
     private static final String DIALOG_DATE = "DialogDate";
     private static final String DIALOG_TIME = "DialogTime";
+    private static final String EXTRA_IS_DELETED = "isdeleted";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 1;
 
@@ -63,6 +67,14 @@ public class CrimeFragment extends Fragment {
         super.onCreate(savedInstanceState);
         UUID crimeID = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeID);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
     @Override
@@ -85,6 +97,26 @@ public class CrimeFragment extends Fragment {
             updateTime(mCrime.getDate());
         }
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_detail, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_delete_crime:
+                CrimeLab.get(getActivity()).deleteCrime(mCrime);
+                sendResult(Activity.RESULT_OK, true);
+                getActivity().finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
 
     private void updateDate(GregorianCalendar date) {
         mDateButton.setText(
@@ -143,23 +175,18 @@ public class CrimeFragment extends Fragment {
                 mCrime.setSolved(isChecked);
             }
         });
-
-//        returnResult();
         return v;
     }
 
-//    private void returnResult() {
-//        Intent intent = new Intent();
-//        intent.putExtra(EXTRA_CRIME_TITLE, mTitleText.getText());
-//        intent.putExtra(EXTRA_CRIME_IS_SOLVED, mSolvedCheckBox.isChecked());
-//        getActivity().setResult(Activity.RESULT_OK, intent);
-//    }
-//
-//    public static CharSequence getChangedTitle(Intent intent) {
-//        return intent.getCharSequenceExtra(EXTRA_CRIME_TITLE);
-//    }
-//
-//    public static boolean getChangedSolved(Intent intent) {
-//        return intent.getBooleanExtra(EXTRA_CRIME_IS_SOLVED, false);
-//    }
+    private void sendResult(int RESULT_CODE, boolean isDeleted) {
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_IS_DELETED, isDeleted);
+        getActivity().setResult(RESULT_CODE, intent);
+    }
+
+    public static boolean isDeleted(Intent intent) {
+        return intent.getBooleanExtra(EXTRA_IS_DELETED, false);
+    }
+
+
 }
