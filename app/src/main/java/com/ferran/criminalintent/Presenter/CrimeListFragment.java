@@ -59,11 +59,7 @@ public class CrimeListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (CrimeLab.get(getActivity()).getCrimes().size() == 0) {
-            return;
-        } else if (mAdapter != null) {
-            updateUI();
-        }
+        updateUI();
     }
 
     @Override

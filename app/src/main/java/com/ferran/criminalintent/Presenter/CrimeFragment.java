@@ -3,10 +3,16 @@ package com.ferran.criminalintent.Presenter;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.ShareCompat;
+import android.support.v4.view.PagerAdapter;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -24,6 +30,8 @@ import com.ferran.criminalintent.Model.Crime;
 import com.ferran.criminalintent.Model.CrimeLab;
 import com.ferran.criminalintent.R;
 
+import java.net.URI;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,19 +43,22 @@ import java.util.UUID;
  */
 public class CrimeFragment extends Fragment {
     private static final String ARG_CRIME_ID = "crime_id";
-    private static final String EXTRA_CRIME_TITLE = "com.ferran.criminalintent.Presenter.crime_title";
-    private static final String EXTRA_CRIME_IS_SOLVED = "com.ferran.criminalintent.Presenter.crime_issolved";
-    private static final String DIALOG_DATE = "DialogDate";
-    private static final String DIALOG_TIME = "DialogTime";
     private static final String EXTRA_IS_DELETED = "isdeleted";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 1;
+    private static final int REQUEST_CONTACT = 2;
+    private static final int REQUEST_CALL_NUMBER = 3;
 
-    private Crime mCrime;
     private EditText mTitleText;
     private Button mDateButton;
     private Button mTimeButton;
+    private Button mSuspectButton;
+    private Button mReportButton;
+    private Button mCallButton;
     private CheckBox mSolvedCheckBox;
+
+    private Crime mCrime;
+    private String phoneNumber;
 
     public CrimeFragment() {
         // Required empty public constructor
@@ -70,10 +81,10 @@ public class CrimeFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+    // update datebase after finishing editing
     @Override
     public void onPause() {
         super.onPause();
-
         CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
@@ -95,6 +106,22 @@ public class CrimeFragment extends Fragment {
                     mCrime.getDate().get(Calendar.DAY_OF_MONTH),
                     date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE)));
             updateTime(mCrime.getDate());
+        } else if (requestCode == REQUEST_CONTACT && data != null) {
+            Uri contactUri = data.getData();
+            String[] queryFields = new String[]{ContactsContract.Contacts.DISPLAY_NAME};
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+            try {
+                if (c.getCount() == 0) {
+                    return;
+                }
+                c.moveToFirst();
+                String suspect = c.getString(0);
+                mCrime.setSuspect(suspect);
+                mSuspectButton.setText(suspect);
+            } finally {
+                c.close();
+            }
         }
     }
 
@@ -127,9 +154,32 @@ public class CrimeFragment extends Fragment {
         mTimeButton.setText(new SimpleDateFormat("HH:mm").format(date.getTime()));
     }
 
+    private String getCrimeReport() {
+        String solvedString = null;
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+        } else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+        String dateString = new SimpleDateFormat("EEE, MMM dd").format(mCrime.getDate().getTime());
+
+        String suspect = mCrime.getSuspect();
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else {
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+
+        String report = getString(R.string.crime_report,
+                mCrime.getTitle(), dateString, solvedString, suspect);
+
+        return report;
+    }
+
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_crime, container, false);
         mTitleText = (EditText) v.findViewById(R.id.crime_title);
         mTitleText.setText(mCrime.getTitle());
@@ -167,6 +217,49 @@ public class CrimeFragment extends Fragment {
                 startActivityForResult(intent, REQUEST_TIME);
             }
         });
+        mReportButton = (Button) v.findViewById(R.id.crime_report);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ShareCompat.IntentBuilder intentBuilder =
+                        ShareCompat.IntentBuilder.from(getActivity());
+                intentBuilder.setType("text/plain");
+                intentBuilder.setText(getCrimeReport());
+                intentBuilder.setSubject(getString(R.string.crime_report_subject));
+                intentBuilder.setChooserTitle(R.string.send_report);
+                startActivity(intentBuilder.createChooserIntent());
+            }
+        });
+        //find contact name and phonenumber
+        final Intent pickContact = new Intent(Intent.ACTION_PICK,
+                ContactsContract.Contacts.CONTENT_URI);
+        mSuspectButton = (Button) v.findViewById(R.id.crime_suspect);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(pickContact, REQUEST_CONTACT);
+            }
+        });
+        if (mCrime.getSuspect() != null) {
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+
+        PackageManager packageManager = getActivity().getPackageManager();
+        if (packageManager.resolveActivity(
+                pickContact, PackageManager.MATCH_DEFAULT_ONLY) == null) {
+            mSuspectButton.setEnabled(false);
+        }
+
+        mCallButton = (Button) v.findViewById(R.id.crime_call);
+        mCallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        if (mCrime.getSuspect() == null) {
+            mCallButton.setEnabled(false);
+        }
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.crime_solved);
         mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -175,6 +268,7 @@ public class CrimeFragment extends Fragment {
                 mCrime.setSolved(isChecked);
             }
         });
+
         return v;
     }
 
