@@ -4,11 +4,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.ferran.criminalintent.Model.DateBase.CrimeBaseHelper;
 import com.ferran.criminalintent.Model.DateBase.CrimeCursorWrapper;
 import com.ferran.criminalintent.Model.DateBase.CrimeDbSchema;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -101,5 +103,13 @@ public class CrimeLab {
         values.put(CrimeDbSchema.Cols.SOLVED, crime.isSolved() ? 1 : 0);
         values.put(CrimeDbSchema.Cols.SUSPECT, crime.getSuspect());
         return values;
+    }
+
+    public File getPhotoFile(Crime crime) {
+        File externalFilesDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (externalFilesDir == null) {
+            return null;
+        }
+        return new File(externalFilesDir, crime.getPhotoFilename());
     }
 }
