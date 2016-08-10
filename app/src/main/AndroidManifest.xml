@@ -26,6 +26,7 @@
             android:parentActivityName=".Presenter.CrimeListActivity"></activity>
         <activity android:name=".Presenter.DatePickerActivity"></activity>
         <activity android:name=".Presenter.TimePickerActivity"></activity>
+        <activity android:name=".Presenter.DialogActivity"></activity>
     </application>
 
 </manifest>

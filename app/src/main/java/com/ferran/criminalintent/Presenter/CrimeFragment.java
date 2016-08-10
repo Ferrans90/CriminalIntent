@@ -24,6 +24,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -70,6 +71,8 @@ public class CrimeFragment extends Fragment {
 
     private Crime mCrime;
     private File mPhotoFile;
+    private int mPhotoHeight;
+    private int mPhotoWidth;
     private String phoneNumber;
 
     public CrimeFragment() {
@@ -140,8 +143,8 @@ public class CrimeFragment extends Fragment {
             } finally {
                 c.close();
             }
-        }else if(requestCode==REQUEST_PHOTO){
-            updatePhotoView();
+        } else if (requestCode == REQUEST_PHOTO) {
+            updatePhotoView(mPhotoWidth, mPhotoHeight);
         }
     }
 
@@ -197,11 +200,20 @@ public class CrimeFragment extends Fragment {
         return report;
     }
 
-    private void updatePhotoView(){
-        if(mPhotoFile==null||!mPhotoFile.exists()){
+    private void updatePhotoView() {
+        if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
-        }else {
-            Bitmap bitmap=PictureUtils.getScaledBitmap(mPhotoFile.getPath(),getActivity());
+        } else {
+            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity());
+            mPhotoView.setImageBitmap(bitmap);
+        }
+    }
+
+    private void updatePhotoView(int width, int height) {
+        if (mPhotoFile == null || !mPhotoFile.exists()) {
+            mPhotoView.setImageDrawable(null);
+        } else {
+            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), width, height);
             mPhotoView.setImageBitmap(bitmap);
         }
     }
@@ -310,9 +322,9 @@ public class CrimeFragment extends Fragment {
         boolean canTakePhoto
                 = mPhotoFile != null && captureImage.resolveActivity(packageManager) != null;
         mPhotoButton.setEnabled(canTakePhoto);
-        if(canTakePhoto){
-            Uri uri=Uri.fromFile(mPhotoFile);
-            captureImage.putExtra(MediaStore.EXTRA_OUTPUT,uri);
+        if (canTakePhoto) {
+            Uri uri = Uri.fromFile(mPhotoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
         }
         mPhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -321,7 +333,23 @@ public class CrimeFragment extends Fragment {
             }
         });
         mPhotoView = (ImageView) v.findViewById(R.id.crime_photo);
-        updatePhotoView();
+        ViewTreeObserver viewTreeObserver = mPhotoView.getViewTreeObserver();
+        viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mPhotoHeight = mPhotoView.getHeight();
+                mPhotoWidth = mPhotoView.getWidth();
+                mPhotoView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+        updatePhotoView(mPhotoWidth, mPhotoHeight);
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = DialogActivity.newIntent(getActivity(), mPhotoFile);
+                startActivity(intent);
+            }
+        });
         return v;
     }
 

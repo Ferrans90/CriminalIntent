@@ -110,6 +110,7 @@ public class CrimeLab {
         if (externalFilesDir == null) {
             return null;
         }
+        // Constructs a new file using the specified path.
         return new File(externalFilesDir, crime.getPhotoFilename());
     }
 }
